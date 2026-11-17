@@ -1,6 +1,6 @@
 ﻿# Sky
 
-**Sky — Study Intelligence.**
+**Sky — Reach the sky in learning.**
 
 Sky is a personal learning platform designed to help students organize knowledge, understand their progress, identify knowledge gaps, and prepare more effectively for exams.
 
