@@ -1,20 +1,61 @@
 import './styles/App.css'
 import { Book } from './components/Book'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
+type BookData =
+{
+  id:number,
+  title:string,
+  author:string,
+  read:boolean
+}
+
+type APIBookData =
+{
+  userId: number,
+  id: number,
+  title: string,
+  body: string
+}
 
 function App() 
 {
-  const [books, setBooks] = useState([
-    {id: 1, title: "First book", author: "tidiest", read: false},
-    {id: 2, title: "Second book", author: "tidiest", read: false},
-    {id: 3, title: "Third book", author: "tidiest", read: false},
-    {id: 4, title: "Fourth book", author: "tidiest", read: false},
-    {id: 5, title: "Fifth book", author: "tidiest", read: false},
-    {id: 6, title: "Sixth book", author: "tidiest", read: false},
-  ])
+  const [books, setBooks] = useState<BookData[]>([]);
+
+  useEffect(()=>{
+
+    async function fetchBooks()
+    {
+      try
+      {
+          const booksResponse = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=10");
+          if (!booksResponse.ok) 
+          {
+            throw new Error("Request failed");
+          }
+
+          const booksAPI = await booksResponse.json();
+
+      setBooks(booksAPI.map((book:APIBookData) => ({id:book.id, title:book.title, author:"tidiest", read:false})));
+      }
+      catch (e)
+      {
+          console.error("Exception: ", e);
+      }
+      console.log("effect")
+      
+    }
+
+    fetchBooks();
+
+  }, []);
 
   const [searchBookTitle, setSearchBookTitle] = useState("");
   const [searchOnlyRead, setSearchOnlyRead] = useState(false);
+
+  const filteredBooks = books.filter(book => book.title.toLocaleLowerCase().includes(searchBookTitle.toLocaleLowerCase()));
+  const visibleBooks = filteredBooks.filter(book => (book.read || !searchOnlyRead));
+
   return (
     <>
       <h1>My Books</h1>
@@ -30,20 +71,19 @@ function App()
       checked={searchOnlyRead}
       onChange={(event) => setSearchOnlyRead(event.target.checked)}
       />
-      
       {
-        books.filter(book => 
-          book.title.toLocaleLowerCase().includes(searchBookTitle.toLocaleLowerCase()))
-        .filter(book => (searchOnlyRead ? book.read === searchOnlyRead : true))
-        .map(book => (
-          <Book key={book.id} title={book.title} author={book.author} read={book.read} onMarkAsRead={()=>{
-            setBooks(prev => 
-              prev.map(mappedBook => 
-                 mappedBook.id === book.id ? {...mappedBook, read:!mappedBook.read} : mappedBook
-              )
-            );
-          }} />
-        ))}
+        visibleBooks.map(book => (
+          <Book 
+            key={book.id} 
+            title={book.title} 
+            author={book.author} 
+            read={book.read} 
+            onMarkAsRead={()=>{
+              setBooks(prev => prev.map(mappedBook => mappedBook.id === book.id ? {...mappedBook, read:!mappedBook.read} : mappedBook));
+            }} 
+          />
+        ))
+        }
     </>
   )
 }
